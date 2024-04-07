@@ -1,4 +1,5 @@
 from binary_search_median import *
+import statistics
 
 def test_upper_median():
     assert upper_median_idx([1,2,3,4]) == 2
@@ -31,7 +32,6 @@ def test_remove_inclusive_1():
     high = (1,1)
 
     output = remove_els_inclusive(arrs, low, high)
-    print(output)
     assert output[0] == [3]
     assert output[1] == [4]
 
@@ -48,3 +48,16 @@ def test_remove_inclusive_2():
     print(output)
     assert output[0] == [3,4]
     assert output[1] == [5,6]
+    
+def test_median_search():
+    arrs = [
+        [1,2,3,4],
+        [5,6,7,8]
+    ]
+    
+    big_arr = []
+    for arr in arrs:
+        big_arr.extend(arr)
+
+    out = median_search(arrs)
+    assert out == statistics.median(big_arr)

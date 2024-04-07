@@ -1,7 +1,10 @@
 import statistics
+import copy
 import random
 import time
 import numpy as np
+
+from binary_search_median import median_search
 
 def median_from_n_arrays(arrays):
     big_arr = []
@@ -10,6 +13,8 @@ def median_from_n_arrays(arrays):
     
     return statistics.median(big_arr)
 
+def median_from_n_arrays_search(arrays):
+    return median_search(arrays)
 
 import codewars_test as test
 
@@ -30,12 +35,12 @@ def test_group():
         
     @test.it("Speed Test Cases")
     def test_case():
-        print("Generating first arrays")
         test_arrays_1 = [sorted([random.randrange(1,1000) for _ in range(20)]) for _ in range(5)] 
-        print("Generating second arrays")
         test_arrays_2 = [sorted([random.randrange(1,1000) for _ in range(1000)]) for _ in range(10)] 
-        print("Generating third arrays")
         test_arrays_3 = [sorted([random.randrange(1,1000) for _ in range(2000000)]) for _ in range(15)] 
+        test_arrays_4 = copy.deepcopy(test_arrays_3)
+        
+        print('Finshed generating data, beginning test.')
         start = time.time()
         median_from_n_arrays(test_arrays_1)
         print(f'5x20 arrays took {time.time() - start} seconds.')
@@ -43,5 +48,9 @@ def test_group():
         median_from_n_arrays(test_arrays_2)
         print(f'10x1000 arrays took {time.time() - start} seconds.')
         start = time.time()
-        median_from_n_arrays(test_arrays_3)
-        print(f'15x2000000 arrays took {time.time() - start} seconds.')
+        res = median_from_n_arrays(test_arrays_3)
+        print(f'15x2000000 arrays took {time.time() - start} seconds with the basic alg.')
+        start = time.time()
+        res2 = median_search(test_arrays_4)
+        print(f'15x2000000 arrays took {time.time() - start} seconds with the search alg.')
+        print(f'Different alg results: {res} vs {res2}')
