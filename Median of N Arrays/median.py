@@ -7,6 +7,8 @@ import numpy as np
 
 from binary_search_median import median_of_arrays
 from heap_median import heap_median
+# ( . ) ( . )
+# Courtesy of Syrup
 
 @nb.njit('float64[:,:](int_, int_)', parallel=True)
 def genRandom(n, m):
@@ -18,6 +20,9 @@ def genRandom(n, m):
             res[i,j] = np.random.randint(1,1000)
 
     return res
+
+def makeTestArrays(rows, length):
+    return [np.sort(genRandom(1,length)).flatten().tolist() for _ in range(rows)]    
 
 def median_from_n_arrays(arrays):
     big_arr = []
@@ -45,22 +50,22 @@ def test_group():
         
     @test.it("Speed Test Cases")
     def test_case():
-        test_arrays_1 = [np.sort(genRandom(1,1000)).tolist() for _ in range(5)] 
-        test_arrays_2 = [np.sort(genRandom(1,100000)).tolist() for _ in range(10)] 
-        test_arrays_3 = [np.sort(genRandom(1,1000000)).tolist() for _ in range(15)] 
-        test_arrays_4 = copy.deepcopy(test_arrays_3)
+        test_arrays_1 = makeTestArrays( 5, 1000000)
+        test_arrays_2 = makeTestArrays(10, 10000000)
+        test_arrays_3 = makeTestArrays(15, 100000000)
+        test_arrays_4 = makeTestArrays(15, 100000000)
 
         print('Finshed generating data, beginning test.')
         start = time.time()
-        median_from_n_arrays(test_arrays_1)
-        print(f'5x20 arrays took {time.time() - start} seconds.')
+        median_of_arrays(test_arrays_1)
+        print(f'Case 1 took {time.time() - start} seconds.')
         start = time.time()
-        median_from_n_arrays(test_arrays_2)
-        print(f'10x1000 arrays took {time.time() - start} seconds.')
+        median_of_arrays(test_arrays_2)
+        print(f'Case 2 took {time.time() - start} seconds.')
         start = time.time()
-        #res = median_from_n_arrays(test_arrays_3)
+        res = median_from_n_arrays(test_arrays_3)
         print(f'Case 3 took {time.time() - start} seconds with the basic alg.')
         start = time.time()
         res2 = median_of_arrays(test_arrays_4)
         print(f'Case 3 took {time.time() - start} seconds with the bisection alg.')
-        #print(f'Different alg results. Basic/Brute Force: {res} vs Bisection: {res2}')
+        print(f'Different alg results. Basic/Brute Force: {res} vs Bisection: {res2}')
