@@ -1,78 +1,61 @@
-import statistics
+from bisect import bisect_left
+from bisect import bisect_right
 
-def lower_median_idx(arr):
-    return len(arr)//2 - 1
+# This is not my solution. The original code came from Fbasham on CodeWars, and 
+# they reference the following SO thread for the original description of the algorithm:
+# https://stackoverflow.com/questions/6182488/median-of-5-sorted-arrays
 
-def upper_median_idx(arr):
-    return len(arr)//2
+def kthOfPiles(givenPiles, k):
+    '''
+    Perform binary search for kth element in  multiple sorted list
 
-def find_minmax_medians(arrs):
-    lowers = []
-    uppers = []
-    for i,arr in enumerate(arrs):
-        m = lower_median_idx(arr)
-        n = upper_median_idx(arr)
-        lowers.append((arr[m], m, i))
-        uppers.append((arr[n], n, i))
+    parameters
+    ==========
+    givenPiles  a list of (already sorted) lists
+    k           the index of the number in the pile we want
+    '''
+    begins = [0 for _ in givenPiles]
+    ends = [len(pile) for pile in givenPiles]
+    
+    # For each pile
+    for pileidx,pivotpile in enumerate(givenPiles):
         
-    lowers.sort()
-    uppers.sort(reverse=True)
-    low_arr = lowers[0][2]
-    low_idx = lowers[0][1]
-    upp_arr = uppers[0][2]
-    upp_idx = uppers[0][1]
-    
-    return ((low_arr, low_idx), (upp_arr, upp_idx))
-    
-def remove_els_inclusive(arrs, low, high):
-    # Determine how many elements to remove (we want it the same for both)
-    num_els_low = low[1] + 1 # This one is easy
-    num_els_high = len(arrs[high[0]]) - high[1]
-    
-    num_removed = min(num_els_low, num_els_high)
-    
-    # Do the removal
-    del arrs[low[0]][0:num_removed]
-    del arrs[high[0]][(len(arrs[high[0]]) - num_removed):]
-    return arrs, (low[0], high[0], num_removed)
+        # Search for the desired value, or until we exhaust this pile
+        while begins[pileidx] < ends[pileidx]:
+            # Get the midpoint of our current search window
+            mid = (begins[pileidx]+ends[pileidx])>>1
+            # ... and its value
+            midval = pivotpile[mid]
+            
+            # Then, using binary search (aka bisection)
+            # Count up how many elements of each pile are
+            smaller_count = 0 # strictly smaller than midval
+            smaller_right_count = 0 # less than or equal to midval
+            for pile in givenPiles:
+                smaller_count += bisect_left(pile,midval) # <
+                smaller_right_count += bisect_right(pile,midval) # <=
+                
+            # If the interval between those two contains k
+            if smaller_count <= k and k < smaller_right_count:
+                # ... then that's our answer
+                return midval
+            # Otherwise, we bisect the search window in this pile
+            elif smaller_count > k:
+                # We've gone too far, cut off the right end
+                ends[pileidx] = mid
+            else:
+                # cut off the left end
+                begins[pileidx] = mid+1
+            
+    return -1
 
-def remove_els_exclusive(arrs, low, high):
-    # Determine how many elements to remove (we want it the same for both)
-    num_els_low = low[1] # This one is easy
-    num_els_high = len(arrs[high[0]]) - high[1] - 1
-    
-    num_removed = min(num_els_low, num_els_high)
-    
-    # Do the removal
-    del arrs[low[0]][0:(num_removed-1)]
-    del arrs[high[0]][(len(arrs[high[0]]) - num_removed + 1):]
-    return arrs, (low[0], high[0], num_removed)
+def median_of_arrays(arrs):
+    N = sum([len(arr) for arr in arrs])        
+    mid_idx = N//2
 
-def at_least_three(arrs):
-    for arr in arrs:
-        if len(arr) < 3:
-            return False
-    return True
+    midval = kthOfPiles(arrs, mid_idx)
+    if N % 2 == 0:
+        midval += kthOfPiles(arrs, mid_idx-1)
+        midval /= 2
 
-def median_search(arrs):
-    lengths = []
-    for arr in arrs:
-        lengths.append(len(arr))
-
-    while len(arrs) > 2 and all(length > 2 for length in lengths):
-        low, high = find_minmax_medians(arrs)
-        arrs, (l, h, n) = remove_els_inclusive(arrs, low, high)
-        lengths[l] -= n
-        lengths[h] -= n
-
-        arrs = [arr for arr in arrs if arr]
-        lengths = [length for length in lengths if length > 0]
-        
-    while at_least_three(arrs):
-        low, high = find_minmax_medians(arrs)
-        arrs, _ = remove_els_exclusive(arrs, low, high)
-
-    out = []
-    for arr in arrs:
-        out.extend(arr)
-    return statistics.median(out)
+    return midval

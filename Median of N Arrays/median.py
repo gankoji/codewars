@@ -2,9 +2,22 @@ import statistics
 import copy
 import random
 import time
+import numba as nb
 import numpy as np
 
-from binary_search_median import median_search
+from binary_search_median import median_of_arrays
+from heap_median import heap_median
+
+@nb.njit('float64[:,:](int_, int_)', parallel=True)
+def genRandom(n, m):
+    res = np.empty((n,m))
+
+    # Parallel loop
+    for i in nb.prange(n):
+        for j in range(m):
+            res[i,j] = np.random.randint(1,1000)
+
+    return res
 
 def median_from_n_arrays(arrays):
     big_arr = []
@@ -12,9 +25,6 @@ def median_from_n_arrays(arrays):
         big_arr.extend(arr)
     
     return statistics.median(big_arr)
-
-def median_from_n_arrays_search(arrays):
-    return median_search(arrays)
 
 import codewars_test as test
 
@@ -35,11 +45,11 @@ def test_group():
         
     @test.it("Speed Test Cases")
     def test_case():
-        test_arrays_1 = [sorted([random.randrange(1,1000) for _ in range(20)]) for _ in range(5)] 
-        test_arrays_2 = [sorted([random.randrange(1,1000) for _ in range(1000)]) for _ in range(10)] 
-        test_arrays_3 = [sorted([random.randrange(1,1000) for _ in range(2000000)]) for _ in range(15)] 
+        test_arrays_1 = [np.sort(genRandom(1,1000)).tolist() for _ in range(5)] 
+        test_arrays_2 = [np.sort(genRandom(1,100000)).tolist() for _ in range(10)] 
+        test_arrays_3 = [np.sort(genRandom(1,1000000)).tolist() for _ in range(15)] 
         test_arrays_4 = copy.deepcopy(test_arrays_3)
-        
+
         print('Finshed generating data, beginning test.')
         start = time.time()
         median_from_n_arrays(test_arrays_1)
@@ -48,9 +58,9 @@ def test_group():
         median_from_n_arrays(test_arrays_2)
         print(f'10x1000 arrays took {time.time() - start} seconds.')
         start = time.time()
-        res = median_from_n_arrays(test_arrays_3)
-        print(f'15x2000000 arrays took {time.time() - start} seconds with the basic alg.')
+        #res = median_from_n_arrays(test_arrays_3)
+        print(f'Case 3 took {time.time() - start} seconds with the basic alg.')
         start = time.time()
-        res2 = median_search(test_arrays_4)
-        print(f'15x2000000 arrays took {time.time() - start} seconds with the search alg.')
-        print(f'Different alg results: {res} vs {res2}')
+        res2 = median_of_arrays(test_arrays_4)
+        print(f'Case 3 took {time.time() - start} seconds with the bisection alg.')
+        #print(f'Different alg results. Basic/Brute Force: {res} vs Bisection: {res2}')
